@@ -76,7 +76,7 @@ src/components/PokemonCard.js
 import React from "react";
 import { View, Text, Image } from "react-native";
 
-export default function PokemonCard({ pokemon }) {
+export default function PokemonCard({ pokemon }: any) {
   if (!pokemon) return null;
 
   return (
