@@ -1,127 +1,56 @@
-# 📱 Projeto React Native + Expo + Axios - Busca de Pokémon
+Criar uma tela que:
 
-## 🎯 Objetivo
+* Digite o nome de um Pokémon
+* Clique em "Buscar Pokémon"
+* Consuma a API usando Axios
+* Exiba:
 
-Criar uma aplicação simples utilizando **React Native**, **Expo** e **Axios**, onde o usuário pode digitar o nome de um Pokémon e visualizar:
+  * Nome
+  * Imagem
+* Mostre erro caso não encontre
 
-- Nome do Pokémon
-- Imagem oficial
-- Descrição do Pokémon
+API:
 
-Este projeto é um ótimo exercício para praticar:
-
-- Componentização
-- Consumo de APIs REST
-- Axios
-- Hooks (`useState`)
-- Async/Await
-- Tratamento de erros
-- Organização de pastas em React Native
+```text
+https://pokeapi.co/api/v2/pokemon/{name}
+```
 
 ---
 
 # 📂 Estrutura do Projeto
 
 ```text
-pokemon-app/
+src/
 │
-├── App.js
+├── screens/
+│   └── PokemonScreen.js
 │
-├── src/
-│   ├── services/
-│   │   └── api.js
-│   │
-│   ├── screens/
-│   │   └── PokemonScreen.js
-│   │
-│   └── components/
-│       └── PokemonCard.js
+├── components/
+│   └── PokemonCard.js
 │
-├── package.json
-└── README.md
+└── services/
+    └── api.js
+
+App.js
 ```
 
 ---
 
-# 🚀 Criando o Projeto
-
-Criar um projeto Expo:
-
-```bash
-npx create-expo-app pokemon-app
-```
-
-Entrar na pasta:
-
-```bash
-cd pokemon-app
-```
-
-Instalar o Axios:
+# 1️⃣ Instalar Axios
 
 ```bash
 npm install axios
 ```
 
-ou
-
-```bash
-yarn add axios
-```
-
 ---
 
-# 🌐 API Utilizada
-
-Utilizaremos a PokéAPI, uma API pública e gratuita.
-
-Documentação:
-
-https://pokeapi.co
-
----
-
-## Endpoint para buscar dados do Pokémon
-
-```http
-GET https://pokeapi.co/api/v2/pokemon/pikachu
-```
-
-Retorna:
-
-- Nome
-- Imagem
-- Altura
-- Peso
-- Habilidades
-- Entre outros dados
-
----
-
-## Endpoint para buscar descrição
-
-```http
-GET https://pokeapi.co/api/v2/pokemon-species/pikachu
-```
-
-Retorna:
-
-- Descrição do Pokémon
-- Informações da espécie
-- Geração
-- Habitat
-
----
-
-# 🔧 Configurando o Axios
+# 2️⃣ Configurar API
 
 Arquivo:
 
 ```text
 src/services/api.js
 ```
-
-Código:
 
 ```javascript
 import axios from "axios";
@@ -135,7 +64,7 @@ export default api;
 
 ---
 
-# 🧩 Componente PokemonCard
+# 3️⃣ Criar Card do Pokémon
 
 Arquivo:
 
@@ -143,80 +72,38 @@ Arquivo:
 src/components/PokemonCard.js
 ```
 
-Responsável por exibir:
-
-- Nome
-- Imagem
-- Descrição
-
 ```javascript
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image } from "react-native";
 
 export default function PokemonCard({ pokemon }) {
   if (!pokemon) return null;
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.name}>
-        {pokemon.name.toUpperCase()}
-      </Text>
+    <View>
+      <Text>{pokemon.name}</Text>
 
       <Image
         source={{ uri: pokemon.image }}
-        style={styles.image}
+        style={{
+          width: 200,
+          height: 200,
+        }}
       />
-
-      <Text style={styles.description}>
-        {pokemon.description}
-      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    marginTop: 20,
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  name: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-
-  image: {
-    width: 150,
-    height: 150,
-    marginVertical: 10,
-  },
-
-  description: {
-    textAlign: "center",
-    fontSize: 16,
-  },
-});
 ```
 
 ---
 
-# 📄 Tela Principal
+# 4️⃣ Criar Tela Principal
 
 Arquivo:
 
 ```text
 src/screens/PokemonScreen.js
 ```
-
-Responsável por:
-
-- Receber o nome digitado
-- Fazer a requisição na API
-- Armazenar os dados no estado
-- Exibir o componente PokemonCard
 
 ```javascript
 import React, { useState } from "react";
@@ -225,54 +112,50 @@ import {
   TextInput,
   Button,
   Alert,
-  StyleSheet,
 } from "react-native";
 
 import api from "../services/api";
 import PokemonCard from "../components/PokemonCard";
 
 export default function PokemonScreen() {
-  const [pokemonName, setPokemonName] = useState("");
-  const [pokemon, setPokemon] = useState(null);
+  const [pokemonName, setPokemonName] =
+    useState("");
+
+  const [pokemon, setPokemon] =
+    useState(null);
 
   async function buscarPokemon() {
     try {
-      const pokemonResponse = await api.get(
+      const response = await api.get(
         `/pokemon/${pokemonName.toLowerCase()}`
       );
 
-      const speciesResponse = await api.get(
-        `/pokemon-species/${pokemonName.toLowerCase()}`
-      );
-
-      const descricao =
-        speciesResponse.data.flavor_text_entries.find(
-          item => item.language.name === "en"
-        )?.flavor_text || "Descrição não encontrada";
-
       setPokemon({
-        name: pokemonResponse.data.name,
+        name: response.data.name,
         image:
-          pokemonResponse.data.sprites.other[
+          response.data.sprites.other[
             "official-artwork"
           ].front_default,
-        description: descricao.replace(/\n|\f/g, " "),
       });
     } catch (error) {
       Alert.alert(
         "Erro",
-        "Pokémon não encontrado!"
+        "Pokémon não encontrado"
       );
     }
   }
 
   return (
-    <View style={styles.container}>
+    <View style={{ padding: 20 }}>
       <TextInput
-        placeholder="Digite o nome do Pokémon"
+        placeholder="Digite o Pokémon"
         value={pokemonName}
         onChangeText={setPokemonName}
-        style={styles.input}
+        style={{
+          borderWidth: 1,
+          padding: 10,
+          marginBottom: 10,
+        }}
       />
 
       <Button
@@ -284,38 +167,13 @@ export default function PokemonScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    marginTop: 60,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-});
 ```
 
 ---
 
-# 📱 Arquivo Principal
-
-Arquivo:
-
-```text
-App.js
-```
-
-Código:
+# 5️⃣ App.js
 
 ```javascript
-import React from "react";
 import PokemonScreen from "./src/screens/PokemonScreen";
 
 export default function App() {
@@ -325,184 +183,67 @@ export default function App() {
 
 ---
 
-# 🔍 Fluxo da Aplicação
+# 🧠 O que decorar
 
-## 1. Usuário digita o nome
-
-Exemplo:
-
-```text
-pikachu
-```
-
----
-
-## 2. Axios faz a requisição
+## Criar estado
 
 ```javascript
-GET /pokemon/pikachu
+const [pokemonName, setPokemonName] =
+  useState("");
+
+const [pokemon, setPokemon] =
+  useState(null);
 ```
 
 ---
 
-## 3. API retorna os dados
-
-Exemplo simplificado:
-
-```json
-{
-  "name": "pikachu",
-  "sprites": {
-    "other": {
-      "official-artwork": {
-        "front_default": "url-da-imagem"
-      }
-    }
-  }
-}
-```
-
----
-
-## 4. Busca a descrição
+## Fazer requisição
 
 ```javascript
-GET /pokemon-species/pikachu
+const response =
+  await api.get(`/pokemon/${pokemonName}`);
 ```
 
 ---
 
-## 5. API retorna a descrição
+## Pegar nome
 
-```json
-{
-  "flavor_text_entries": [
-    {
-      "flavor_text": "When several of these Pokémon gather..."
-    }
-  ]
-}
+```javascript
+response.data.name
 ```
 
 ---
 
-## 6. Atualiza o estado
+## Pegar imagem
+
+```javascript
+response.data.sprites.other[
+  "official-artwork"
+].front_default
+```
+
+---
+
+## Atualizar estado
 
 ```javascript
 setPokemon({
-  name: "pikachu",
-  image: "url-da-imagem",
-  description: "When several of these Pokémon gather..."
+  name: response.data.name,
+  image: imageUrl,
 });
 ```
 
 ---
 
-## 7. O componente é renderizado
-
-Resultado:
-
-```text
-PIKACHU
-
-(Imagem)
-
-When several of these Pokémon
-gather, their electricity...
-```
-
----
-
-# 📚 Conceitos Aprendidos
-
-## useState
-
-Permite armazenar informações no componente.
+## Tratar erro
 
 ```javascript
-const [pokemon, setPokemon] = useState(null);
-```
-
----
-
-## Axios
-
-Biblioteca utilizada para fazer requisições HTTP.
-
-```javascript
-const response = await api.get("/pokemon/pikachu");
-```
-
----
-
-## Async/Await
-
-Permite trabalhar com código assíncrono de forma mais simples.
-
-```javascript
-async function buscarPokemon() {
-  const response = await api.get(...);
+catch(error){
+  Alert.alert(
+    "Erro",
+    "Pokémon não encontrado"
+  );
 }
 ```
 
 ---
-
-## Try/Catch
-
-Captura erros da requisição.
-
-```javascript
-try {
-  ...
-} catch (error) {
-  ...
-}
-```
-
----
-
-## Componentização
-
-Separar partes da interface em componentes reutilizáveis.
-
-Exemplo:
-
-```text
-PokemonCard.js
-```
-
----
-
-# 💡 Possíveis Melhorias
-
-Após concluir o exercício, você pode evoluir o projeto adicionando:
-
-- Loading enquanto busca os dados
-- Tradução da descrição para português
-- Lista de Pokémon favoritos
-- Histórico de pesquisas
-- Busca ao pressionar Enter
-- Exibição de tipos do Pokémon
-- Exibição de habilidades
-- Tela de detalhes
-- Navegação com React Navigation
-
----
-
-# ✅ Resultado Final Esperado
-
-O usuário digita o nome de um Pokémon, pressiona o botão de busca e a aplicação exibe:
-
-- Nome
-- Imagem oficial
-- Descrição
-
-Utilizando:
-
-- React Native
-- Expo
-- Axios
-- PokéAPI
-- Componentização
-- Hooks
-- Consumo de API REST
